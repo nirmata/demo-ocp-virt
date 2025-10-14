@@ -1,0 +1,68 @@
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: vm-security-configuration
+  annotations:
+    policies.kyverno.io/title: "Enforce VM Security Configuration"
+    policies.kyverno.io/category: "Security"
+    policies.kyverno.io/severity: "high"
+    policies.kyverno.io/description: "Ensure VMs have proper security configurations"
+spec:
+  validationFailureAction: enforce
+  background: true
+  rules:
+  - name: require-security-context
+    match:
+      any:
+      - resources:
+          kinds:
+          - VirtualMachine
+    validate:
+      message: "VM must have security context defined"
+      pattern:
+        spec:
+          template:
+            spec:
+              securityContext: "?*"
+  - name: require-non-privileged-mode
+    match:
+      any:
+      - resources:
+          kinds:
+          - VirtualMachine
+    validate:
+      message: "VM must run in non-privileged mode"
+      pattern:
+        spec:
+          template:
+            spec:
+              securityContext:
+                runAsNonRoot: true
+  - name: require-read-only-root-fs
+    match:
+      any:
+      - resources:
+          kinds:
+          - VirtualMachine
+    validate:
+      message: "VM must have read-only root filesystem"
+      pattern:
+        spec:
+          template:
+            spec:
+              securityContext:
+                readOnlyRootFilesystem: true
+  - name: restrict-capabilities
+    match:
+      any:
+      - resources:
+          kinds:
+          - VirtualMachine
+    validate:
+      message: "VM must not have dangerous capabilities"
+      deny:
+        conditions:
+          any:
+          - key: "{{ request.object.spec.template.spec.securityContext.capabilities.add }}"
+            operator: AnyIn
+            value: ["SYS_ADMIN", "NET_ADMIN", "SYS_MODULE"]

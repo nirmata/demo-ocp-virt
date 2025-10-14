@@ -1,0 +1,41 @@
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: vm-labeling-enforcement
+  annotations:
+    policies.kyverno.io/title: "Enforce VM Labeling"
+    policies.kyverno.io/category: "Governance"
+    policies.kyverno.io/severity: "medium"
+    policies.kyverno.io/description: "Ensure VMs have required labels"
+spec:
+  validationFailureAction: enforce
+  background: true
+  rules:
+  - name: require-size-label
+    match:
+      any:
+      - resources:
+          kinds:
+          - VirtualMachine
+    validate:
+      message: "VM must have kubevirt.io/size label"
+      pattern:
+        spec:
+          template:
+            metadata:
+              labels:
+                kubevirt.io/size: "?*"
+  - name: require-domain-label
+    match:
+      any:
+      - resources:
+          kinds:
+          - VirtualMachine
+    validate:
+      message: "VM must have kubevirt.io/domain label"
+      pattern:
+        spec:
+          template:
+            metadata:
+              labels:
+                kubevirt.io/domain: "?*"

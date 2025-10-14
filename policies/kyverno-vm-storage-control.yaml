@@ -1,0 +1,89 @@
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: vm-storage-control
+  annotations:
+    policies.kyverno.io/title: "Control VM Storage Allocation"
+    policies.kyverno.io/category: "Resource Management"
+    policies.kyverno.io/severity: "medium"
+    policies.kyverno.io/description: "Restrict the size and type of storage for VM disks"
+spec:
+  validationFailureAction: enforce
+  background: true
+  rules:
+  - name: restrict-pvc-size-for-vms
+    match:
+      any:
+      - resources:
+          kinds:
+          - PersistentVolumeClaim
+          namespaces:
+          - default
+    preconditions:
+      any:
+      - key: "{{ request.object.metadata.labels }}"
+        operator: AnyIn
+        value: ["kubevirt.io/domain", "vm-*"]
+    validate:
+      message: "PVC size must be between 2Gi and 50Gi for VM storage"
+      deny:
+        conditions:
+          any:
+          - key: "{{ request.object.spec.resources.requests.storage }}"
+            operator: LessThan
+            value: "2Gi"
+          - key: "{{ request.object.spec.resources.requests.storage }}"
+            operator: GreaterThan
+            value: "50Gi"
+  - name: enforce-storage-class-for-vms
+    match:
+      any:
+      - resources:
+          kinds:
+          - PersistentVolumeClaim
+          namespaces:
+          - default
+    preconditions:
+      any:
+      - key: "{{ request.object.metadata.labels }}"
+        operator: AnyIn
+        value: ["kubevirt.io/domain", "vm-*"]
+    validate:
+      message: "PVC must use approved storage class (standard, fast-ssd, or slow-hdd)"
+      pattern:
+        spec:
+          storageClassName: "standard|fast-ssd|slow-hdd"
+  - name: require-disk-size-labels
+    match:
+      any:
+      - resources:
+          kinds:
+          - PersistentVolumeClaim
+          namespaces:
+          - default
+    preconditions:
+      any:
+      - key: "{{ request.object.metadata.labels }}"
+        operator: AnyIn
+        value: ["kubevirt.io/domain", "vm-*"]
+    validate:
+      message: "PVC must have disk size and type labels for VM storage"
+      pattern:
+        metadata:
+          labels:
+            kubevirt.io/disk-size: "?*"
+            kubevirt.io/disk-type: "?*"
+  - name: restrict-vm-disk-count
+    match:
+      any:
+      - resources:
+          kinds:
+          - VirtualMachine
+    validate:
+      message: "VM cannot have more than 3 disks"
+      deny:
+        conditions:
+          any:
+          - key: "{{ length(request.object.spec.template.spec.domain.devices.disks) }}"
+            operator: GreaterThan
+            value: 3

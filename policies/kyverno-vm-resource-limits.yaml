@@ -1,0 +1,43 @@
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: vm-resource-limits
+  annotations:
+    policies.kyverno.io/title: "Enforce VM Resource Limits"
+    policies.kyverno.io/category: "Resource Management"
+    policies.kyverno.io/severity: "medium"
+    policies.kyverno.io/description: "Ensure VMs have proper CPU and memory limits"
+spec:
+  validationFailureAction: enforce
+  background: true
+  rules:
+  - name: check-vm-memory-limits
+    match:
+      any:
+      - resources:
+          kinds:
+          - VirtualMachine
+    validate:
+      message: "VM memory must be at least 128M"
+      deny:
+        conditions:
+          any:
+          - key: "{{ request.object.spec.template.spec.domain.resources.requests.memory }}"
+            operator: LessThan
+            value: "128M"
+  - name: require-cpu-limits
+    match:
+      any:
+      - resources:
+          kinds:
+          - VirtualMachine
+    validate:
+      message: "VM must have CPU limits defined"
+      pattern:
+        spec:
+          template:
+            spec:
+              domain:
+                resources:
+                  requests:
+                    cpu: "?*"

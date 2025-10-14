@@ -1,0 +1,28 @@
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: vm-image-verification
+  annotations:
+    policies.kyverno.io/title: "Enforce VM Image Verification"
+    policies.kyverno.io/category: "Security"
+    policies.kyverno.io/severity: "high"
+    policies.kyverno.io/description: "Ensure VM images are from trusted sources"
+spec:
+  validationFailureAction: enforce
+  background: true
+  rules:
+  - name: check-trusted-image-registry
+    match:
+      any:
+      - resources:
+          kinds:
+          - VirtualMachine
+    validate:
+      message: "VM images must be from quay.io/kubevirt registry"
+      pattern:
+        spec:
+          template:
+            spec:
+              volumes:
+                - containerDisk:
+                    image: "quay.io/kubevirt/*"

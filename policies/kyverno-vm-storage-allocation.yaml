@@ -1,0 +1,75 @@
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: vm-storage-allocation
+  annotations:
+    policies.kyverno.io/title: "Control VM Storage Allocation"
+    policies.kyverno.io/category: "Resource Management"
+    policies.kyverno.io/severity: "medium"
+    policies.kyverno.io/description: "Restrict the size and type of PVCs created for VM disks"
+spec:
+  validationFailureAction: enforce
+  background: true
+  rules:
+  - name: check-pvc-size-limits
+    match:
+      any:
+      - resources:
+          kinds:
+          - PersistentVolumeClaim
+    validate:
+      message: "PVC size must be between 1Gi and 100Gi for VM storage"
+      deny:
+        conditions:
+          any:
+          - key: "{{ request.object.spec.resources.requests.storage }}"
+            operator: LessThan
+            value: "1Gi"
+          - key: "{{ request.object.spec.resources.requests.storage }}"
+            operator: GreaterThan
+            value: "100Gi"
+  - name: check-pvc-storage-class
+    match:
+      any:
+      - resources:
+          kinds:
+          - PersistentVolumeClaim
+    validate:
+      message: "PVC must use approved storage class for VM storage"
+      pattern:
+        spec:
+          storageClassName: "standard|fast-ssd|slow-hdd"
+  - name: check-vm-disk-size
+    match:
+      any:
+      - resources:
+          kinds:
+          - VirtualMachine
+    validate:
+      message: "VM disk size must be specified and between 1Gi and 50Gi"
+      pattern:
+        spec:
+          template:
+            spec:
+              domain:
+                devices:
+                  disks:
+                    - disk:
+                        bus: virtio
+                      name: "?*"
+              volumes:
+                - name: "?*"
+                  persistentVolumeClaim:
+                    claimName: "?*"
+  - name: require-disk-size-annotation
+    match:
+      any:
+      - resources:
+          kinds:
+          - VirtualMachine
+    validate:
+      message: "VM must have disk size annotation for storage control"
+      pattern:
+        metadata:
+          annotations:
+            vm.kubevirt.io/disk-size: "?*"

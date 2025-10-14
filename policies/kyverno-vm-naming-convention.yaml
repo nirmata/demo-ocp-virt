@@ -1,0 +1,24 @@
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: vm-naming-convention
+  annotations:
+    policies.kyverno.io/title: "Enforce VM Naming Conventions"
+    policies.kyverno.io/category: "Governance"
+    policies.kyverno.io/severity: "low"
+    policies.kyverno.io/description: "Ensure VMs follow naming conventions"
+spec:
+  validationFailureAction: enforce
+  background: true
+  rules:
+  - name: check-vm-naming
+    match:
+      any:
+      - resources:
+          kinds:
+          - VirtualMachine
+    validate:
+      message: "VM name must start with 'vm-' and be lowercase"
+      pattern:
+        metadata:
+          name: "vm-*"

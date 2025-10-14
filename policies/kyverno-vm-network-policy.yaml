@@ -1,0 +1,76 @@
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: vm-network-policy
+  annotations:
+    policies.kyverno.io/title: "Enforce VM Network Configuration"
+    policies.kyverno.io/category: "Security"
+    policies.kyverno.io/severity: "medium"
+    policies.kyverno.io/description: "Ensure VMs have proper network configuration and policies"
+spec:
+  validationFailureAction: enforce
+  background: true
+  rules:
+  - name: require-network-configuration
+    match:
+      any:
+      - resources:
+          kinds:
+          - VirtualMachine
+    validate:
+      message: "VM must have proper network configuration"
+      pattern:
+        spec:
+          template:
+            spec:
+              networks:
+                - name: "?*"
+                  pod: {}
+  - name: require-network-interface
+    match:
+      any:
+      - resources:
+          kinds:
+          - VirtualMachine
+    validate:
+      message: "VM must have at least one network interface"
+      pattern:
+        spec:
+          template:
+            spec:
+              domain:
+                devices:
+                  interfaces:
+                    - name: "?*"
+                      masquerade: {}
+  - name: restrict-network-modes
+    match:
+      any:
+      - resources:
+          kinds:
+          - VirtualMachine
+    validate:
+      message: "VM must use approved network modes (masquerade or bridge)"
+      pattern:
+        spec:
+          template:
+            spec:
+              domain:
+                devices:
+                  interfaces:
+                    - masquerade: "?*"
+                    - bridge: "?*"
+  - name: require-network-labels
+    match:
+      any:
+      - resources:
+          kinds:
+          - VirtualMachine
+    validate:
+      message: "VM must have network-related labels"
+      pattern:
+        spec:
+          template:
+            metadata:
+              labels:
+                kubevirt.io/network: "?*"

@@ -1,0 +1,88 @@
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: vm-resource-quota
+  annotations:
+    policies.kyverno.io/title: "Enforce VM Resource Quotas"
+    policies.kyverno.io/category: "Resource Management"
+    policies.kyverno.io/severity: "medium"
+    policies.kyverno.io/description: "Ensure VMs have proper resource quotas and limits"
+spec:
+  validationFailureAction: enforce
+  background: true
+  rules:
+  - name: require-resource-limits
+    match:
+      any:
+      - resources:
+          kinds:
+          - VirtualMachine
+    validate:
+      message: "VM must have both requests and limits defined"
+      pattern:
+        spec:
+          template:
+            spec:
+              domain:
+                resources:
+                  requests: "?*"
+                  limits: "?*"
+  - name: check-cpu-limits
+    match:
+      any:
+      - resources:
+          kinds:
+          - VirtualMachine
+    validate:
+      message: "VM must have CPU limits defined"
+      pattern:
+        spec:
+          template:
+            spec:
+              domain:
+                resources:
+                  limits:
+                    cpu: "?*"
+  - name: check-memory-limits
+    match:
+      any:
+      - resources:
+          kinds:
+          - VirtualMachine
+    validate:
+      message: "VM must have memory limits defined"
+      pattern:
+        spec:
+          template:
+            spec:
+              domain:
+                resources:
+                  limits:
+                    memory: "?*"
+  - name: enforce-memory-limits
+    match:
+      any:
+      - resources:
+          kinds:
+          - VirtualMachine
+    validate:
+      message: "VM memory limits must be at least 256M"
+      deny:
+        conditions:
+          any:
+          - key: "{{ request.object.spec.template.spec.domain.resources.limits.memory }}"
+            operator: LessThan
+            value: "256M"
+  - name: require-resource-annotations
+    match:
+      any:
+      - resources:
+          kinds:
+          - VirtualMachine
+    validate:
+      message: "VM must have resource quota annotations"
+      pattern:
+        metadata:
+          annotations:
+            vm.kubevirt.io/cpu-quota: "?*"
+            vm.kubevirt.io/memory-quota: "?*"

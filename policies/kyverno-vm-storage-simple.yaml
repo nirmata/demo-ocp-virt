@@ -1,0 +1,69 @@
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: vm-storage-simple
+  annotations:
+    policies.kyverno.io/title: "Control VM Storage Allocation"
+    policies.kyverno.io/category: "Resource Management"
+    policies.kyverno.io/severity: "medium"
+    policies.kyverno.io/description: "Restrict the size and type of storage for VM disks"
+spec:
+  validationFailureAction: enforce
+  background: true
+  rules:
+  - name: restrict-pvc-size
+    match:
+      any:
+      - resources:
+          kinds:
+          - PersistentVolumeClaim
+    preconditions:
+      any:
+      - key: "{{ request.object.metadata.labels.\"kubevirt.io/domain\" }}"
+        operator: AnyIn
+        value: ["vm-*"]
+    validate:
+      message: "PVC size must be between 2Gi and 50Gi for VM storage"
+      deny:
+        conditions:
+          any:
+          - key: "{{ request.object.spec.resources.requests.storage }}"
+            operator: LessThan
+            value: "2Gi"
+          - key: "{{ request.object.spec.resources.requests.storage }}"
+            operator: GreaterThan
+            value: "50Gi"
+  - name: enforce-storage-class
+    match:
+      any:
+      - resources:
+          kinds:
+          - PersistentVolumeClaim
+    preconditions:
+      any:
+      - key: "{{ request.object.metadata.labels.\"kubevirt.io/domain\" }}"
+        operator: AnyIn
+        value: ["vm-*"]
+    validate:
+      message: "PVC must use approved storage class (standard, fast-ssd, or slow-hdd)"
+      pattern:
+        spec:
+          storageClassName: "standard|fast-ssd|slow-hdd"
+  - name: require-disk-labels
+    match:
+      any:
+      - resources:
+          kinds:
+          - PersistentVolumeClaim
+    preconditions:
+      any:
+      - key: "{{ request.object.metadata.labels.\"kubevirt.io/domain\" }}"
+        operator: AnyIn
+        value: ["vm-*"]
+    validate:
+      message: "PVC must have required labels for VM storage"
+      pattern:
+        metadata:
+          labels:
+            kubevirt.io/disk-size: "?*"
+            kubevirt.io/disk-type: "?*"
