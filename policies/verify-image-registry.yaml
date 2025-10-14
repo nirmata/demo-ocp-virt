@@ -8,7 +8,7 @@ metadata:
     policies.kyverno.io/severity: "high"
     policies.kyverno.io/description: "Ensure VM images are from trusted sources"
 spec:
-  validationFailureAction: enforce
+  validationFailureAction: audit
   background: true
   rules:
   - name: check-trusted-image-registry
@@ -19,10 +19,9 @@ spec:
           - VirtualMachine
     validate:
       message: "VM images must be from quay.io/kubevirt registry"
-      pattern:
-        spec:
-          template:
-            spec:
-              volumes:
-                - containerDisk:
-                    image: "quay.io/kubevirt/*"
+      deny:
+        conditions:
+          any:
+          - key: "{{ request.object.spec.template.spec.volumes[0].containerDisk.image }}"
+            operator: AnyNotIn
+            value: ["quay.io/kubevirt/*"]

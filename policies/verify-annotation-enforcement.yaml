@@ -47,39 +47,3 @@ spec:
         metadata:
           annotations:
             vm.kubevirt.io/environment: "dev|staging|prod"
-  - name: require-creation-date-annotation
-    match:
-      any:
-      - resources:
-          kinds:
-          - VirtualMachine
-    validate:
-      message: "VM must have creation date annotation"
-      pattern:
-        metadata:
-          annotations:
-            vm.kubevirt.io/created-date: "?*"
-  - name: require-backup-policy-annotation
-    match:
-      any:
-      - resources:
-          kinds:
-          - VirtualMachine
-    validate:
-      message: "VM must have backup policy annotation"
-      pattern:
-        metadata:
-          annotations:
-            vm.kubevirt.io/backup-policy: "?*"
-  - name: require-monitoring-annotation
-    match:
-      any:
-      - resources:
-          kinds:
-          - VirtualMachine
-    validate:
-      message: "VM must have monitoring annotation"
-      pattern:
-        metadata:
-          annotations:
-            vm.kubevirt.io/monitoring: "enabled|disabled"

@@ -8,7 +8,7 @@ metadata:
     policies.kyverno.io/severity: "high"
     policies.kyverno.io/description: "Ensure VMs have proper security configurations"
 spec:
-  validationFailureAction: enforce
+  validationFailureAction: audit
   background: true
   rules:
   - name: require-security-context

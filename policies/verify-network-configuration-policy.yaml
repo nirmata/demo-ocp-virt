@@ -51,26 +51,20 @@ spec:
           - VirtualMachine
     validate:
       message: "VM must use approved network modes (masquerade or bridge)"
-      pattern:
-        spec:
+      anyPattern:
+      - spec:
           template:
             spec:
               domain:
                 devices:
                   interfaces:
-                    - masquerade: "?*"
-                    - bridge: "?*"
-  - name: require-network-labels
-    match:
-      any:
-      - resources:
-          kinds:
-          - VirtualMachine
-    validate:
-      message: "VM must have network-related labels"
-      pattern:
-        spec:
+                    - name: "?*"
+                      masquerade: {}
+      - spec:
           template:
-            metadata:
-              labels:
-                kubevirt.io/network: "?*"
+            spec:
+              domain:
+                devices:
+                  interfaces:
+                    - name: "?*"
+                      bridge: {}

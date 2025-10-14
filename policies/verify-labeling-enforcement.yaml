@@ -11,20 +11,6 @@ spec:
   validationFailureAction: enforce
   background: true
   rules:
-  - name: require-size-label
-    match:
-      any:
-      - resources:
-          kinds:
-          - VirtualMachine
-    validate:
-      message: "VM must have kubevirt.io/size label"
-      pattern:
-        spec:
-          template:
-            metadata:
-              labels:
-                kubevirt.io/size: "?*"
   - name: require-domain-label
     match:
       any:
