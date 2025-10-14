@@ -1,7 +1,7 @@
 apiVersion: kyverno.io/v1
 kind: ClusterPolicy
 metadata:
-  name: vm-image-verification
+  name: verify-image-registry
   annotations:
     policies.kyverno.io/title: "Enforce VM Image Verification"
     policies.kyverno.io/category: "Security"
