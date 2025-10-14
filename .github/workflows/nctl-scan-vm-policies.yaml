@@ -1,0 +1,59 @@
+name: NCTL Scan VM Policies
+
+run-name: ${{ github.actor }} has triggered VM Policy Scan Action 🚀
+
+on:
+  pull_request:
+    branches:
+      - "main"
+  push:
+    branches: ["main"]
+
+env:
+  NIRMATA_TOKEN: ${{ secrets.NIRMATA_TOKEN }}
+  NIRMATA_URL: ${{ secrets.NIRMATA_URL }}
+
+jobs:
+  NCTL-Scan-VM-Policies:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "🎉 The job was automatically triggered by a ${{ github.event_name }} event."
+      
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Run a one-line script
+        run: |
+          echo "Downloading and Installing NCTL"
+          wget https://nirmata-downloads.s3.us-east-2.amazonaws.com/nctl/nctl_4.7.0/nctl_4.7.0_linux_386.zip
+          unzip -o *.zip
+          chmod 755 ./nctl
+          sudo mv nctl /usr/local/bin/nctl
+          nctl login nch --url https://nirmata.io --userid dolis@nirmata.com --token ${{ secrets.NIRMATA_TOKEN }}
+      
+      - run: echo "🖥️ The workflow is now ready to test your VM policies on the runner."
+      
+      - name: Check nctl version
+        run: nctl version
+      
+      - name: NCTL Scan 1 - VM Policies (Positive Test)
+        run: |
+          echo "Scanning vm-good.yaml against VM policies..."
+          nctl scan kyverno -p policies/ -r vm/vm-good.yaml --details
+      
+      - name: NCTL Scan 2 - VM Policies (Negative Test)
+        run: |
+          echo "Scanning vm.yaml (negative test) against VM policies..."
+          nctl scan kyverno -p policies/ -r vm/vm.yaml --details --publish
+      
+      - name: NCTL Scan 3 - VM Policies (Bad Image Test)
+        run: |
+          echo "Scanning vm-bad-image.yaml against VM policies..."
+          nctl scan kyverno -p policies/ -r vm/vm-bad-image.yaml --details --audit-as-warn
+      
+      - name: NCTL Scan 4 - All VM Policies Validation
+        run: |
+          echo "Validating all VM policies for syntax and structure..."
+          nctl scan kyverno -p policies/ --details
+      
+      - run: echo "🍏 This job's status is ${{ job.status }}."
