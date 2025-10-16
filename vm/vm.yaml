@@ -8,6 +8,7 @@ spec:
     metadata:
       labels:
         kubevirt.io/size: small
+        kubevirt.io/domain: "default"
     spec:
       domain:
         devices:
@@ -24,10 +25,10 @@ spec:
         resources:
           requests:
             memory: 64M
-            cpu: 100m
+            cpu: "100m"
           limits:
-            cpu: 200m
-            memory: 128M
+            memory: "128M"
+            cpu: "500m"
       networks:
       - name: default
         pod: {}
