@@ -7,7 +7,7 @@ spec:
   template:
     metadata:
       labels:
-        kubevirt.io/size: small
+        kubevirt.io/size: medium
     spec:
       domain:
         devices:
