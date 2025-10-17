@@ -1,14 +1,13 @@
 apiVersion: kubevirt.io/v1
 kind: VirtualMachine
 metadata:
-  name: vm-testvm
+  name: testvm
 spec:
   runStrategy: Halted
   template:
     metadata:
       labels:
         kubevirt.io/size: small
-        kubevirt.io/domain: "default"
     spec:
       domain:
         devices:
@@ -24,7 +23,6 @@ spec:
             masquerade: {}
         resources:
           requests:
-            cpu: "100m"
             memory: 64M
       networks:
       - name: default
