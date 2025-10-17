@@ -24,11 +24,8 @@ spec:
             masquerade: {}
         resources:
           requests:
-            memory: 64M
             cpu: "100m"
-          limits:
-            memory: "128M"
-            cpu: "500m"
+            memory: 64M
       networks:
       - name: default
         pod: {}
