@@ -39,7 +39,7 @@ jobs:
       - name: Scan 1 - VM Policies 
         run: |
           echo "Scanning resources against VM policies..."
-          nctl scan kubernetes -p policies/ -r vm/vm.yaml
+          nctl scan kubernetes -p policies/ -r vm/vm.yaml --details
       
       
       - run: echo "🍏 This job's status is ${{ job.status }}."
