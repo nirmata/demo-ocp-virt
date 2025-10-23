@@ -29,9 +29,6 @@ spec:
           requests:
             cpu: "100m"
             memory: "128M"
-          limits:
-            cpu: "200m"
-            memory: "256M"
       networks:
       - name: default
         pod: {}
