@@ -1,6 +1,6 @@
 ## 🎯 Overview
 
-This repository contains a set of Kubernetes policy definitions using Kyverno to ensure that Virtual Machines deployed in OpenShift Virtualization clusters adhere to organizational standards for security, resource management, and operational excellence.
+This repository contains a set of Kubernetes policy definitions using Kyverno to ensure that Virtual Machines deployed in OpenShift Virtualization clusters adhere to organizational standards for security, resource management, and operational excellence..
 
 ## 📋 Policy Catalog
 
